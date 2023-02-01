@@ -1,0 +1,118 @@
+---
+title: "Nintendo_Switch_Best_Selling_Games"
+author: "Jubayer"
+date: "2023-02-01"
+output: html_document
+---
+## Loading Packages
+```{r}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+```
+
+## Creating Dataset
+```{r}
+nintendo <- read_csv("D:\\Google Data Analytics\\nintendo\\best_selling.csv")
+
+```
+## Top Ten Best Selling Games
+```{r}
+top_10 <- nintendo %>% 
+  arrange(desc(copies_sold)) %>% 
+  slice(1:10)
+View(top_10)
+```
+
+## Visualization of Top 10 Best Selling Games
+```{r}
+ggplot(top_10, aes(x=title, y=copies_sold/1000000))+
+  geom_col(fill="blue")+
+  theme(axis.text.x = element_text(size=10, angle = 90))+
+  ylab("Sold In Million")+
+  xlab("Games")+
+  labs(title = "Top 10 Best Selling Games")
+```
+
+## Top 5 most Popular Genre 
+```{r}
+#top 5 most popular genre 
+top_5G = aggregate(nintendo$copies_sold, by=list(Genre=nintendo$genre), FUN=sum) %>% 
+  arrange(desc(x)) %>% 
+  slice(1:5)
+```
+## Visuallization of Top 5 most Popular Genre
+```{r}
+ggplot(top_5G, aes(x= Genre, y = x/1000000))+
+  geom_col(fill= "Skyblue")+
+  theme(axis.text.x = element_text(size=10, angle = 45))+
+  ylab("Sold In Million")+
+  xlab("Genre")+
+  labs(title = "Top five Most Popular Genre")
+
+```
+
+## Total number of copies sold from 2018 to 2022
+```{r}
+year_data <- nintendo %>% 
+  group_by("year" = format(as_of, "%Y")) %>% 
+  summarise(Sold= sum(copies_sold))
+head(year_data)
+
+```
+
+## Visualization of games sold per year
+```{r}
+ggplot(year_data, aes(x= year, y= Sold/1000000, group=1))+
+  geom_line(color= "green", size=1.2)+
+  ylab("Sold In Million")+
+  geom_point()+
+  labs(title = "Number of Games sold in 2018-2022")
+```
+
+## Copies sold by each Developer
+```{r}
+dev <- nintendo %>% 
+  group_by(developer) %>% 
+  summarise(copies_sold=sum(copies_sold)) %>% 
+  arrange(desc(copies_sold))
+dev
+```
+
+## Top 5 developer and other developer comparison
+```{r}
+top5 <- dev %>%
+  slice(1:5) #separating top 5
+
+#adding all other developers total copies_sold into one variable 
+other <- dev %>%
+  slice(6:40) %>% 
+  summarise( developer= 'Other developers', copies_sold= sum(copies_sold))
+#merging this two information
+top_5_and_other <- rbind(top5, other)
+head(top_5_and_other)
+```
+
+## Pie chart of top 5 and other developers Sales Performance
+```{r}
+ggplot(top_5_and_other, aes(x = "", y = copies_sold, fill = developer)) +
+  geom_col(color = "black") +
+  geom_text(aes(label = paste0(round((copies_sold*100)/sum(copies_sold)), "%")),
+            position = position_stack(vjust = 0.5)) +
+  coord_polar(theta = "y") +
+  scale_fill_brewer() +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "#ebf2ff"),
+        plot.background = element_rect(fill = "#ebf2ff"),
+        legend.background = element_rect(fill = "#ebf2ff"))+
+  labs(title = "Comparison of Sales Performance by Developers")
+
+```
+
+
+
+
